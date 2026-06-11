@@ -1,0 +1,13 @@
+# Generated images and videos
+generated_*.png
+test_*.png
+sun_loop*.mp4
+wallpapers/
+
+# Script scratch output
+*_output.txt
+*_status.txt
+
+# Python
+__pycache__/
+*.pyc

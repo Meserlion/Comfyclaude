@@ -1,0 +1,59 @@
+{
+  "1": {
+    "class_type": "UNETLoader",
+    "_meta": {"title": "Load Z-Image Turbo"},
+    "inputs": {"unet_name": "z_image_turbo_bf16.safetensors", "weight_dtype": "default"}
+  },
+  "2": {
+    "class_type": "CLIPLoader",
+    "_meta": {"title": "Load Qwen3-4B text encoder"},
+    "inputs": {"clip_name": "qwen_3_4b.safetensors", "type": "lumina2", "device": "default"}
+  },
+  "3": {
+    "class_type": "VAELoader",
+    "_meta": {"title": "Load VAE"},
+    "inputs": {"vae_name": "ae.safetensors"}
+  },
+  "4": {
+    "class_type": "ModelSamplingAuraFlow",
+    "_meta": {"title": "Shift 3.0"},
+    "inputs": {"model": ["1", 0], "shift": 3.0}
+  },
+  "5": {
+    "class_type": "CLIPTextEncode",
+    "_meta": {"title": "Prompt"},
+    "inputs": {
+      "text": "A woman in flowing white embroidered robes sits in serene meditation in deep space, holding a blazing miniature sun floating above her open palm, stars and a glowing galaxy in the background, cinematic lighting, ultra detailed",
+      "clip": ["2", 0]
+    }
+  },
+  "6": {
+    "class_type": "ConditioningZeroOut",
+    "_meta": {"title": "Negative (zeroed - turbo uses CFG 1)"},
+    "inputs": {"conditioning": ["5", 0]}
+  },
+  "7": {
+    "class_type": "EmptySD3LatentImage",
+    "_meta": {"title": "Latent 1024x1024"},
+    "inputs": {"width": 1024, "height": 1024, "batch_size": 1}
+  },
+  "8": {
+    "class_type": "KSampler",
+    "_meta": {"title": "KSampler - 9 steps, CFG 1"},
+    "inputs": {
+      "model": ["4", 0], "positive": ["5", 0], "negative": ["6", 0],
+      "latent_image": ["7", 0], "seed": 0, "steps": 9, "cfg": 1.0,
+      "sampler_name": "res_multistep", "scheduler": "simple", "denoise": 1.0
+    }
+  },
+  "9": {
+    "class_type": "VAEDecode",
+    "_meta": {"title": "VAE Decode"},
+    "inputs": {"samples": ["8", 0], "vae": ["3", 0]}
+  },
+  "10": {
+    "class_type": "SaveImage",
+    "_meta": {"title": "Save image"},
+    "inputs": {"images": ["9", 0], "filename_prefix": "z_image"}
+  }
+}

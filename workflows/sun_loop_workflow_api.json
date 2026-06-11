@@ -1,8 +1,8 @@
 {
   "1": {
     "class_type": "UNETLoader",
-    "_meta": {"title": "Load Wan 2.1 i2v 14B"},
-    "inputs": {"unet_name": "wan2.1_i2v_480p_14B_fp8_e4m3fn.safetensors", "weight_dtype": "default"}
+    "_meta": {"title": "Load Wan 2.1 Fun-InP 14B (trained for end-frame conditioning - no flash)"},
+    "inputs": {"unet_name": "Wan2.1-Fun-InP-14B_fp8_e4m3fn.safetensors", "weight_dtype": "default"}
   },
   "2": {
     "class_type": "CLIPLoader",
@@ -46,11 +46,11 @@
     }
   },
   "9": {
-    "class_type": "WanFirstLastFrameToVideo",
-    "_meta": {"title": "FLF2V - same image both ends = perfect loop"},
+    "class_type": "WanFunInpaintToVideo",
+    "_meta": {"title": "Fun-InP - same image both ends = perfect loop"},
     "inputs": {
       "positive": ["7", 0], "negative": ["8", 0], "vae": ["3", 0],
-      "clip_vision_start_image": ["6", 0], "clip_vision_end_image": ["6", 0],
+      "clip_vision_output": ["6", 0],
       "start_image": ["5", 0], "end_image": ["5", 0],
       "width": 848, "height": 464, "length": 81, "batch_size": 1
     }
@@ -65,7 +65,7 @@
     "_meta": {"title": "KSampler"},
     "inputs": {
       "model": ["10", 0], "positive": ["9", 0], "negative": ["9", 1],
-      "latent_image": ["9", 2], "seed": 0, "steps": 20, "cfg": 6.0,
+      "latent_image": ["9", 2], "seed": 0, "steps": 30, "cfg": 5.0,
       "sampler_name": "uni_pc", "scheduler": "simple", "denoise": 1.0
     }
   },

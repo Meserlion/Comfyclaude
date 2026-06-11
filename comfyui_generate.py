@@ -230,10 +230,16 @@ def main():
         list_all_models(args.host)
         sys.exit(0)
 
+    # Video-model names to skip when auto-detecting for image generation
+    def prefer_image_model(options):
+        video_markers = ("wan", "i2v", "t2v", "flf2v", "fun-inp", "umt5", "hunyuan_video", "ltx")
+        image_first = [o for o in options if not any(m in o.lower() for m in video_markers)]
+        return image_first or options
+
     # Auto-detect UNET
     unet = args.unet
     if not unet:
-        unets = get_node_options("UNETLoader", "unet_name", args.host)
+        unets = prefer_image_model(get_node_options("UNETLoader", "unet_name", args.host))
         if not unets:
             print("ERROR: No UNET models found. Please install a model.")
             sys.exit(1)
@@ -243,7 +249,7 @@ def main():
     # Auto-detect CLIP
     clip = args.clip
     if not clip:
-        clips = get_node_options("CLIPLoader", "clip_name", args.host)
+        clips = prefer_image_model(get_node_options("CLIPLoader", "clip_name", args.host))
         if not clips:
             print("ERROR: No CLIP models found.")
             sys.exit(1)

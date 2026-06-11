@@ -16,9 +16,10 @@ IMAGE = "z-image_00084_.png"
 OUTPUT = "sun_loop.mp4"
 FRAMES = 81          # 4n+1, ~5s @ 16fps
 FPS = 16
-STEPS = 20
-CFG = 6.0
+STEPS = 30           # more steps = better temporal/lighting coherence
+CFG = 5.0            # lower CFG reduces brightness pumping / flicker
 SHIFT = 5.0
+TRIM = 1             # Fun-InP is trained for end-frame conditioning - only the exact duplicate frame to drop
 
 POSITIVE = (
     "A woman in flowing white embroidered robes sits in serene meditation in deep space, "
@@ -99,7 +100,7 @@ def main():
 
     nodes = {
         "1": {"class_type": "UNETLoader", "inputs": {
-            "unet_name": "wan2.1_i2v_480p_14B_fp8_e4m3fn.safetensors",
+            "unet_name": "Wan2.1-Fun-InP-14B_fp8_e4m3fn.safetensors",
             "weight_dtype": "default"}},
         "2": {"class_type": "CLIPLoader", "inputs": {
             "clip_name": "umt5_xxl_fp8_e4m3fn_scaled.safetensors",
@@ -115,9 +116,9 @@ def main():
             "text": POSITIVE, "clip": ["2", 0]}},
         "8": {"class_type": "CLIPTextEncode", "inputs": {
             "text": NEGATIVE, "clip": ["2", 0]}},
-        "9": {"class_type": "WanFirstLastFrameToVideo", "inputs": {
+        "9": {"class_type": "WanFunInpaintToVideo", "inputs": {
             "positive": ["7", 0], "negative": ["8", 0], "vae": ["3", 0],
-            "clip_vision_start_image": ["6", 0], "clip_vision_end_image": ["6", 0],
+            "clip_vision_output": ["6", 0],
             "start_image": ["5", 0], "end_image": ["5", 0],
             "width": w, "height": h, "length": FRAMES, "batch_size": 1}},
         "10": {"class_type": "ModelSamplingSD3", "inputs": {
@@ -128,9 +129,9 @@ def main():
             "sampler_name": "uni_pc", "scheduler": "simple", "denoise": 1.0}},
         "12": {"class_type": "VAEDecode", "inputs": {
             "samples": ["11", 0], "vae": ["3", 0]}},
-        # trim the duplicated last frame so the loop has no stutter
+        # trim duplicated last frame + convergence-flare frames at the seam
         "13": {"class_type": "ImageFromBatch", "inputs": {
-            "image": ["12", 0], "batch_index": 0, "length": FRAMES - 1}},
+            "image": ["12", 0], "batch_index": 0, "length": FRAMES - TRIM}},
         "14": {"class_type": "CreateVideo", "inputs": {
             "images": ["13", 0], "fps": float(FPS)}},
         "15": {"class_type": "SaveVideo", "inputs": {
